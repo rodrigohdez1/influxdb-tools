@@ -1,0 +1,24 @@
+version: '3'
+services:
+  influxdb-source:
+    image: "influxdb:1.8"
+    ports:
+      - "8086:8086"
+      - "2003:2003"
+      - "8088:8088"
+    volumes:
+      - ./influxdb.conf:/etc/influxdb/influxdb.conf
+      - ./influxdb-source/:/var/lib/influxdb
+      - ./:/tmp/backup-and-restore
+
+  influxdb-destination:
+    image: "influxdb:1.8"
+    volumes:
+      - ./influxdb.conf:/etc/influxdb/influxdb.conf
+      - ./influxdb-destination/:/var/lib/influxdb
+      - ./:/tmp/backup-and-restore
+
+  chronograf:
+    image: "chronograf:latest"
+    ports:
+      - "8888:8888"
