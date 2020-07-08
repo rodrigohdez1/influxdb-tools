@@ -1,0 +1,6 @@
+.vscode
+incremental-backups
+backup-and-restore
+influxdb-source/*
+influxdb-destination/*
+influxdb.conf

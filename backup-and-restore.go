@@ -110,6 +110,8 @@ func main() {
 	c := flag.Bool("continuous-queries", false, "Copy Continuous Queries from source to destination.")
 	j := flag.String("influxdb-query-source", "http://influxdb-source:8086", "Influxdb source where to query via HTTP. Used for CQs")
 	k := flag.String("influxdb-query-destination", "http://influxdb-destination:8086", "Influxdb destination where to query via HTTP. Used for CQs")
+	a := flag.String("start", "", "Start time for backup")
+	b := flag.String("end", "", "End time for backup")
 
 	flag.Parse()
 
@@ -124,6 +126,8 @@ func main() {
 	cqs := *c
 	sourceQueryDB := *j
 	destinationQueryDB := *k
+	start := *a
+	end := *b
 
 	influxdCommand := "/usr/bin/influxd"
 	rmCmd := "/bin/rm"
@@ -131,6 +135,12 @@ func main() {
 	if cqs != false {
 		backupAndRestoreCQs(sourceQueryDB, destinationQueryDB, dbName)
 		os.Exit(0)
+	}
+
+	intervalBackup := false
+
+	if start != "" && end != "" {
+		intervalBackup = true
 	}
 
 	if firstRun != false {
@@ -147,8 +157,15 @@ func main() {
 		checkError(err)
 	} else {
 		// Backup from specified timeframe
-		sinceTime := time.Now().Local().Add(time.Hour * time.Duration(timeStamp)).Format(time.RFC3339)
-		endTime := time.Now().Local().Format(time.RFC3339)
+		sinceTime := ""
+		endTime := ""
+		if intervalBackup != false {
+			sinceTime = start
+			endTime = end
+		} else {
+			sinceTime = time.Now().Local().Add(time.Hour * time.Duration(timeStamp)).Format(time.RFC3339)
+			endTime = time.Now().Local().Format(time.RFC3339)
+		}
 		partialImportCommand := []string{"backup", "-portable", "-database", dbName, "-host", sourceDb, "-start", sinceTime, "-end", endTime, databaseDirectory}
 		output, err := executeCommand(influxdCommand, partialImportCommand)
 		checkError(err)

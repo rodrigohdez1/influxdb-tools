@@ -31,4 +31,5 @@ Test database created with [influx-stress](https://github.com/influxdata/influx-
 ** All backup and restore commands must be run FROM the InfluxDB destination node!!! **
 
 Initial backup (Running on influxdb-destination node)
+
 ```# ./backup_and_restore -firstrun```
