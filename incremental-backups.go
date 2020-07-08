@@ -35,13 +35,12 @@ func main() {
 	s := flag.String("influxdb-source", "influxdb-source:8088", "Influxdb source where to query and get original database.")
 	i := flag.String("influxdb-destination", "influxdb-destination:8088", "Influxdb destination where to store the database.")
 	n := flag.String("database", "stress", "Influxdb database name to backup and restore.")
-	r := flag.String("from", "2006-01-00T00:00:00Z", "Timeframe in RFC3339 format to start backup.")
-	l := flag.String("until", "2006-01-00T00:00:00Z", "Timeframe in RFC3339 format to start backup.")
-	c := flag.String("command", "/usr/bin/influxd", "Backup and restore command path.")
+	r := flag.String("start", "2006-01-00T00:00:00Z", "Timeframe in RFC3339 format to start backup.")
+	l := flag.String("end", "2006-01-00T00:00:00Z", "Timeframe in RFC3339 format to start backup.")
+	c := flag.String("command", "/opt/influxdb/backup-and-restore", "Backup and restore command path.")
 
 	flag.Parse()
 
-	// Get variables
 	sourceDb := *s
 	destinationDb := *i
 	dbName := *n
@@ -49,12 +48,6 @@ func main() {
 	endDate := *l
 	command := *c
 	backupTimeframe := 1
-
-	// initialDate := "2020-06-26T00:00:00Z"
-	// endDate := "2020-06-26T01:00:00Z"
-	// Get initial date and get the difference in hours against end date
-	// Print influx backup commands
-
 	initial, err := time.Parse(time.RFC3339, initialDate)
 	until, err := time.Parse(time.RFC3339, endDate)
 	checkError(err)
@@ -66,16 +59,10 @@ func main() {
 
 	for i := 0; i < int(d.Hours()); i++ {
 		n := start.Add(time.Hour * time.Duration(backupTimeframe))
-		myString := fmt.Sprintf("%s -from %s -until %s -influxdb-source %s -influxdb-destination %s -database %s", command, start.Format(time.RFC3339), n.Format(time.RFC3339), sourceDb, destinationDb, dbName)
-		// output, err = executeCommand(command, restoreToTempDBArgs)
-		// checkError(err)
-		// go ps(myString)
-		ps(myString)
+		backupCommand := []string{"-start", start.Format(time.RFC3339), "-end", n.Format(time.RFC3339), "-influxdb-source", sourceDb, "-influxdb-destination", destinationDb, "-database", dbName}
+		output, err := executeCommand(command, backupCommand)
+		checkError(err)
+		log.Info(output)
 		start = n
 	}
-}
-
-func ps(s string) {
-	time.Sleep(1 * time.Second)
-	log.Info(s)
 }
